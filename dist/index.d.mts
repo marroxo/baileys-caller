@@ -38,6 +38,8 @@ export declare class ActiveCall extends EventEmitter {
 export declare class VoipClient {
     #private;
     constructor(config: VoipSdkConfig);
+    /** The underlying Baileys socket, for messaging alongside calls. Null until connected. */
+    get sock(): any;
     /** Connect to WhatsApp and bring up the WASM VoIP stack. */
     connect: () => Promise<void>;
     /** Place an outbound voice call. */

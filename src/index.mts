@@ -103,9 +103,8 @@ export class ActiveCall extends EventEmitter {
 
   end = (): void => {
     if (this.#ended) return;
-    this.#ended = true;
-    if (this.#endTimer) { clearTimeout(this.#endTimer); this.#endTimer = null; }
     try { this.engine.endCall(0, true); } catch {}
+    this._forceEnd("hangup");
   };
 
   mute = (muted: boolean): void => {
@@ -158,6 +157,9 @@ export class VoipClient {
   constructor(config: VoipSdkConfig) {
     this.#config = config;
   }
+
+  /** The underlying Baileys socket, for messaging alongside calls. Null until connected. */
+  get sock(): any { return this.#sock; }
 
   /** Connect to WhatsApp and bring up the WASM VoIP stack. */
   connect = async (): Promise<void> => {
@@ -315,6 +317,9 @@ export class VoipClient {
     const call = new ActiveCall(callId, this.#engine, durationMs);
     call._audioSource = audioSource;
     this.#activeCall = call;
+    call.once("ended", () => {
+      if (this.#activeCall === call) this.#activeCall = null;
+    });
 
     this.#engine.startCall({
       peerJid: peerLid,
